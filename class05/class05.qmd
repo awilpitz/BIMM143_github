@@ -1,0 +1,190 @@
+---
+title: "Class 05: Data Visualization with GGPLOT"
+author: "Amanda Wilpitz (PID: A17463962)"
+format: pdf
+---
+
+## Background
+
+> Q1. For which phases is data visualization important in our scientific workflows?
+
+All of the Above
+
+> Q2. True or False? The ggplot2 package comes already installed with R?
+
+False
+
+## Intro to ggplot
+
+There are many graphics systems in R (ways to make plots and figures). These include "base" R plots. Today we will focus mostly on the **ggplot2** package.
+
+Let's start with a plot of a simple in-built dataset called `cars`.
+
+```{r}
+head(cars)
+```
+
+```{r}
+plot(cars)
+```
+
+Let's see how we can make this figure using **ggplot**. First I need to install this package on my computer. To install any R package, I used the function `install.packages()`.
+
+> I will run \`install.packages("ggplot2") in my R console not this quarto document!
+
+Before I can use any functions from add on packages, I need to load the package from my "library()" with the `library(ggplot2)` call.
+
+```{r}
+library(ggplot2)
+
+ggplot(cars) 
+```
+
+All ggplot figures have at least 3 things (called layers). These include:
+
+-   **data** (the input dataset I want to plot from)
+-   **aes** (the aesthetic mapping of the data to my plot)
+-   **geoms** (the geom_point(), geom_line(), etc. that I want to draw)
+
+```{r}
+ggplot(cars) + 
+  aes(x=speed, y=dist) +
+  geom_point() 
+```
+
+Let's add a line to show the relationship here:
+
+```{r}
+ggplot(cars) + 
+  aes(x=speed, y=dist) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw() +
+  labs(title = "My First GGPLOT", x = "Speed (MPH)", y = "Stopping Distance (ft)", caption = "Dataset: 'cars'")
+```
+
+> Q: Which geometric layer should be used to create scatter plots in ggplot2?
+
+geom_point()
+
+> Q. Which plot types are typically NOT used to compare distributions of numeric variables?
+
+Network graphs
+
+> Q. Which statement about data visualization with ggplot2 is incorrect?
+
+ggplot2 is the only way to create plots in R
+
+## Gene Expression Figure
+
+The code to read the dataset is
+
+```{r}
+url <- "https://bioboot.github.io/bimm143_S20/class-material/up_down_expression.txt"
+genes <- read.delim(url)
+head(genes)
+```
+
+> Q.How many genes are in this dataset?
+
+```{r}
+nrow(genes)
+```
+
+> Q. Use the colnames() function and the ncol() function on the genes data frame to find out what the column names are (we will need these later) and how many columns there are. How many columns did you find?
+
+```{r}
+colnames(genes)
+ncol(genes)
+```
+
+> Q. Use the table() function on the State column of this data.frame to find out how many ‘up’ regulated genes there are. What is your answer?
+
+```{r}
+table(genes$State)
+```
+
+> Q. Using your values above and 2 significant figures. What fraction of total genes is up-regulated in this dataset?
+
+```{r}
+n.tot <- nrow(genes)
+vals <- table(genes$State)
+
+vals.percent <- vals/n.tot * 100
+round(vals.percent, 2)
+```
+
+A first plot of this dataset
+
+```{r}
+ggplot(genes) +
+  aes(x = Condition1, y = Condition2, col = State) +
+  geom_point() +
+  scale_color_manual(values=c("blue", "grey", "red"))+
+  labs(title = "Gene Expression Changes Upon Drug Treatment", x = "Control Expression", y = "Drug Pressenence Expression")
+```
+
+## Going Further 
+
+Take `gapminder` data frame and filter to contain only rows with `year` value of 2007>
+
+
+```{r}
+# File location online
+url <- "https://raw.githubusercontent.com/jennybc/gapminder/master/inst/extdata/gapminder.tsv"
+
+gapminder <- read.delim(url)
+```
+
+```{r}
+library(dplyr)
+
+gapminder_2007 <- gapminder %>% filter(year==2007)
+```
+
+```{r}
+head(gapminder_2007)
+```
+
+
+>Q. Scatter plot of this gapminder_2007 dataset:
+
+```{r}
+plot_2007 <- ggplot(gapminder_2007) +
+  aes(x=gdpPercap, y=lifeExp, size = pop, col = continent) +
+  geom_point(alpha=0.5) +
+  scale_size_area(max_size = 10)
+
+plot_2007 
+```
+
+
+> Q. Can you adapt the code you have learned thus far to reproduce our gapminder scatter plot for the year 1957? What do you notice about this plot is it easy to compare with the one for 2007?
+
+```{r}
+gapminder_1957 <- gapminder %>% filter(year==1957)
+```
+
+```{r}
+plot_1957 <- ggplot(gapminder_1957) +
+  aes(x = gdpPercap, y = lifeExp, size = pop, col = continent) +
+  geom_point(alpha = 0.7) + 
+  scale_size_area(max_size = 10)
+
+plot_1957
+```
+
+> Q. Do the same steps above but include 1957 and 2007 in your input dataset for ggplot(). You should now include the layer facet_wrap(~year) to produce the following plot:
+
+```{r}
+gapminder_1957_2007 <- gapminder %>% filter(year==1957 | year == 2007)
+
+plot_1957_2007 <- ggplot(gapminder_1957_2007) +
+  aes(x = gdpPercap, y = lifeExp, size = pop, col = continent) +
+  geom_point(alpha = 0.7) + 
+  scale_size_area(max_size = 10) +
+  facet_wrap(~year)
+
+plot_1957_2007
+```
+
