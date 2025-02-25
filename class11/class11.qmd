@@ -1,0 +1,102 @@
+---
+title: "AlphaFold Analysis"
+author: "Amanda Wilpitz | A17463962"
+format: pdf
+---
+
+Here we analyze our AlphaFold structure prediction models. The input directory/folder comes from the ColabFold server:
+
+```{r}
+#Change this for YOUR results dir name
+results_dir <- ""
+```
+
+```{r}
+#File names for all PDB models
+pdb_files <- list.files(path = "/Users/awzme/OneDrive/Desktop/bimm 143/class11/hivpr_monomer_23119/hivpr_monomer_23119/",
+                        pattern = ".pdb",
+                        full.names = TRUE)
+
+#Print our PDB file names
+basename(pdb_files)
+```
+
+I will use the Bio3D package for analysis 
+```{r}
+library(bio3d)
+```
+
+Align and superpose
+
+```{r}
+pdbs <- pdbaln(pdb_files, fit=TRUE, exefile="msa")
+```
+
+```{r}
+pdbs
+```
+
+
+```{r}
+pc <- pca(pdbs)
+plot(pc)
+```
+
+## RMSD Analysis
+
+RMSD is a common measure of structural distance used in structural biology
+
+```{r}
+rd <- rmsd(pdbs, fit = T)
+```
+
+```{r}
+rd
+```
+
+```{r}
+range(rd)
+```
+
+```{r}
+library(pheatmap)
+
+colnames(rd) <- paste0("m",1:5)
+rownames(rd) <- paste0("m",1:5)
+pheatmap(rd)
+```
+
+
+Molstar superposed dimers (chain A superposed) structure: 
+
+![Superposed Chain A](Superposed_ChainA.png)
+
+```{r}
+pdb <- read.pdb("1hsg")
+```
+
+```{r}
+plotb3(pdbs$b[1,], typ="l", lwd=2, sse=pdb)
+points(pdbs$b[2,], typ="l", col="red")
+points(pdbs$b[3,], typ="l", col="blue")
+points(pdbs$b[4,], typ="l", col="darkgreen")
+points(pdbs$b[5,], typ="l", col="orange")
+abline(v=100, col="gray")
+```
+
+```{r}
+core <- core.find(pdbs)
+
+core.inds <- print(core, vol=0.51)
+```
+```{r}
+xyz <- pdbfit(pdbs, core.inds, outpath = "corefit_structures")
+```
+
+```{r}
+rf <- rmsf(xyz)
+
+plotb3(rf, sse=pdb)
+abline(v=100, col = "grey", ylab = "RMSF")
+```
+

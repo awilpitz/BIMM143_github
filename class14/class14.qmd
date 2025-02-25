@@ -1,0 +1,130 @@
+---
+title: "Class 14: RNA-Seq Analysis Mini-Project"
+author: "Amanda Wilpitz | A17463962"
+toc: true
+format: pdf
+---
+
+## Background
+
+The data for for hands-on session comes from GEO entry: GSE37704, which is associated with the following publication:
+
+> Trapnell C, Hendrickson DG, Sauvageau M, Goff L et al. “Differential analysis of gene regulation at transcript resolution with RNA-seq” Nat Biotechnol 2013 Jan; 31 (1):46-53. PMID: 23222703
+
+The authors report on differential analysis of lung fibroblasts in response to loss of the develop-
+mental transcription factor HOXA1. Their results and others indicate that HOXA1 is required
+
+for lung fibroblast and HeLa cell cycle progression. In particular their analysis show that “loss of HOXA1 results in significant expression level changes in thousands of individual transcripts, along with isoform switching events in key regulators of the cell cycle”. For our session we
+have used their Sailfish gene-level estimated counts and hence are restricted to protein-coding genes only.
+
+## Data Import
+
+```{r}
+counts = read.csv("GSE37704_featurecounts.csv", row.names = 1)
+head(counts)
+```
+
+```{r}
+colData = read.csv("GSE37704_metadata.csv")
+head(colData)
+```
+
+Inspect and Tidy Data
+
+Does the `counts` columns match the `colData`  row?
+
+```{r}
+colData$id
+```
+
+
+```{r}
+colnames(counts)
+```
+
+No, the two do not match. The fix here looks to be removing the first "length" column from counts:
+
+```{r}
+countData <- counts[, -1]
+head(countData)
+```
+
+Check for matching countData and colData
+
+```{r}
+colnames(countData) == colData$id
+```
+
+> Q1. How many genes in total?
+
+```{r}
+nrow(countData)
+```
+
+> Q2. Filter to remove zero count genes (rows where there are zero counts in all columns). How many genes are left?
+
+```{r}
+new.countData <- countData[rowSums(countData) > 0,]
+head(new.countData)
+```
+
+```{r}
+nrow(new.countData)
+```
+
+## Setup for DESeq
+
+```{r}
+library(DESeq2)
+```
+
+Setupinput object for DESEq
+
+```{r}
+dds <- DESeqDataSetFromMatrix(new.countData, 
+                              colData = colData,
+                              design = ~condition)
+```
+## Run DESeq
+
+```{r}
+dds <- DESeq(dds)
+```
+
+```{r}
+res <- results(dds)
+
+head(res)
+```
+
+## Volcano Plot of Results
+
+```{r}
+library(ggplot2)
+```
+
+```{r}
+mycols <- rep("grey", nrow(res))
+mycols[abs(res$log2FoldChange) > 2] <- "blue"
+mycols[abs(res$log2FoldChange) > 2 & res$padj > 0.05] <- "red"
+```
+
+```{r}
+ggplot(res) +
+  aes(log2FoldChange, -log(padj)) +
+  geom_point(col=mycols) + 
+  geom_vline(xintercept=-2,linetype=2) +
+  geom_vline(xintercept=2,linetype=2) +
+  geom_hline(yintercept=-log(0.05),linetype=2)
+```
+
+## Gene Annotation
+
+Add gene SYMPOL and ENTREZID
+
+
+```{r}
+library("AnnotationDbi")
+library("org.Hs.eg.db")
+```
+
