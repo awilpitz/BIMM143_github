@@ -3,7 +3,7 @@ This is my repository for my Bioinformatics course ([BIMM143](https://bioboot.gi
 
 ### Index of Material 
 
-- Class04: 
+- Class04: [Introduction to R](https://github.com/awilpitz/BIMM143_github/tree/main/class04/class04.pdf)
 - Class05: 
 - Class06:
 - Class07: 
